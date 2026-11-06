@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#123c2b">
+<title>Dadu Peti Misteri</title>
+
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden}
+body{background:#102d22;color:white;font-family:Arial,sans-serif;display:flex;flex-direction:column}
+button{font-family:inherit;cursor:pointer}
+header{text-align:center;padding:10px 8px;background:linear-gradient(135deg,#164c35,#26734c);border-bottom:3px solid #d9b65b;flex-shrink:0}
+header h1{margin:0;font-size:clamp(22px,5vw,34px);color:#ffe69a}
+header p{margin:5px 0 0;font-size:13px}
+.container{width:100%;max-width:1100px;margin:auto;padding:7px 10px;flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;flex-shrink:0}
+.info{background:#1b4935;border:1px solid #548465;border-radius:12px;padding:8px 12px;font-size:13px}
+.controls{display:flex;gap:5px;flex-wrap:wrap}
+.smallbtn{border:1px solid #8db99a;background:#245b3d;color:white;padding:8px 10px;border-radius:9px;font-weight:bold;font-size:12px}
+.players{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:5px 0 8px;flex-shrink:0}
+.player{background:#1b4935;border:2px solid #467858;border-radius:12px;padding:6px 4px;text-align:center;min-width:0;opacity:.7}
+.player.active{border-color:#ffdc66;opacity:1;box-shadow:0 0 12px #e9c34c}
+.player.eliminated{opacity:.3;filter:grayscale(1)}
+.player .animal{font-size:30px}
+.player strong{display:block;font-size:12px}
+.player small{font-size:10px;color:#d4e8d8}
+.bagbtn{margin-top:5px;background:#d8b653;color:#392c0b;border:1px solid #ffe99a;border-radius:7px;padding:5px 7px;font-weight:bold;font-size:10px;width:95%}
+.bagbtn span{display:block;font-size:9px;font-weight:normal;margin-top:2px}
+.board-wrap{background:#17412e;border:3px solid #b99b52;border-radius:15px;padding:7px;overflow-y:auto;overflow-x:hidden;flex:1;min-height:60px;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#d9b65b #17412e}
+.board{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px}
+.tile{aspect-ratio:1/1;min-width:0;position:relative;display:flex;align-items:center;justify-content:center;border-radius:7px;background:#d4e8ae;color:#25432d;font-size:clamp(11px,2.4vw,17px);font-weight:bold;border:1px solid #9eb77b}
+.tile:nth-child(4n){background:#b9d994}
+.tile.chest{background:#e5bd5d;border:2px solid #fff0a4;box-shadow:inset 0 0 7px #fff2b0}
+.tile.start{background:#83c7a0}
+.tile.finish{background:#f1d36c}
+.tile .chesticon{font-size:clamp(16px,3vw,25px)}
+.tile .occupants{position:absolute;bottom:1px;right:0;left:0;display:flex;justify-content:center;flex-wrap:wrap;font-size:clamp(14px,3vw,25px);line-height:1;text-shadow:0 1px 2px #000}
+.tile .number{position:absolute;top:2px;left:4px;font-size:clamp(8px,1.5vw,11px);opacity:.75}
+.game-area{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;flex-shrink:0}
+.panel{background:#1b4935;border:1px solid #548465;border-radius:14px;padding:10px;text-align:center;min-width:0}
+.panel h3{margin:0 0 5px;color:#ffe69a}
+.dice-stage{height:105px;display:flex;align-items:center;justify-content:center;perspective:700px}
+.dice{width:70px;height:70px;position:relative;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.face{position:absolute;width:70px;height:70px;background:linear-gradient(145deg,#fff,#dce4dc);border:3px solid #aebcae;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#182b20;font-size:42px;font-weight:bold;backface-visibility:hidden;box-shadow:inset 0 0 8px #9da99e}
+.front{transform:translateZ(35px)}
+.back{transform:rotateY(180deg) translateZ(35px)}
+.right{transform:rotateY(90deg) translateZ(35px)}
+.left{transform:rotateY(-90deg) translateZ(35px)}
+.top{transform:rotateX(90deg) translateZ(35px)}
+.bottom{transform:rotateX(-90deg) translateZ(35px)}
+.dice.rolling{animation:rollDice .28s linear infinite}
+@keyframes rollDice{0%{transform:rotateX(0) rotateY(0) rotateZ(0)}25%{transform:rotateX(90deg) rotateY(110deg) rotateZ(30deg)}50%{transform:rotateX(190deg) rotateY(210deg) rotateZ(100deg)}75%{transform:rotateX(280deg) rotateY(310deg) rotateZ(210deg)}100%{transform:rotateX(360deg) rotateY(450deg) rotateZ(360deg)}}
+.dice.result1{transform:rotateX(0) rotateY(0)}
+.dice.result2{transform:rotateX(0) rotateY(-90deg)}
+.dice.result3{transform:rotateX(-90deg) rotateY(0)}
+.dice.result4{transform:rotateX(90deg) rotateY(0)}
+.dice.result5{transform:rotateX(0) rotateY(90deg)}
+.dice.result6{transform:rotateX(0) rotateY(180deg)}
+.rollbtn{background:linear-gradient(#ffe58b,#d5a82e);color:#49360b;border:2px solid #fff0ac;border-radius:12px;padding:10px 24px;font-size:17px;font-weight:900;box-shadow:0 4px 0 #8c6a1b}
+.rollbtn:disabled{opacity:.45;cursor:not-allowed}
+.status{font-size:12px;line-height:1.5;min-height:30px}
+.log{margin-top:7px;background:#102f22;border-radius:10px;padding:8px;text-align:left;font-size:11px;max-height:65px;overflow:auto;color:#d7e9d9}
+.modal{position:fixed;inset:0;background:#000b;z-index:20;display:flex;align-items:center;justify-content:center;padding:15px}
+.modal.hidden{display:none}
+.dialog{width:min(480px,100%);max-height:90vh;overflow:auto;background:linear-gradient(145deg,#245b3e,#123b2b);border:3px solid #e5c15c;border-radius:18px;padding:20px;text-align:center;box-shadow:0 10px 40px #0009}
+.dialog h2{color:#ffe69a;margin-top:0}
+.dialog p{line-height:1.55;font-size:14px}
+.effect{font-size:65px;animation:pop .55s ease}
+@keyframes pop{0%{transform:scale(.2);opacity:0}70%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+#questionText{font-size:18px;font-weight:bold;line-height:1.5;margin:12px 0}
+.answer{display:block;width:100%;margin:9px 0;padding:13px;background:#e4edcf;color:#183c29;border:2px solid #a8c18b;border-radius:10px;font-size:15px;font-weight:bold}
+.primary{background:linear-gradient(#ffe58b,#d5a82e);color:#49360b;border:0;border-radius:10px;padding:12px 20px;font-weight:900;font-size:16px;margin:5px}
+.readbtn{background:#245b3d;color:white;border:1px solid #8db99a;border-radius:9px;padding:9px 14px;margin:5px;font-weight:bold}
+.bag-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0;text-align:left}
+.bag-item{background:#102f22;border:1px solid #739b70;border-radius:10px;padding:10px;font-size:12px}
+.bag-item strong{display:block;color:#ffe69a;font-size:13px;margin-bottom:4px}
+.bag-item .bag-emoji{font-size:25px;float:left;margin-right:8px}
+.bag-empty{padding:20px;background:#102f22;border-radius:12px;color:#d4e8d8}
+#rainLayer{position:fixed;inset:0;z-index:50;pointer-events:none;overflow:hidden}
+.rain-item{position:absolute;top:-90px;font-size:clamp(30px,7vw,58px);animation:falling 2.1s cubic-bezier(.2,.65,.45,1) forwards;filter:drop-shadow(0 5px 4px #0008)}
+@keyframes falling{0%{transform:translateY(-10vh) rotate(0deg) scale(.5);opacity:0}12%{opacity:1}75%{transform:translateY(75vh) rotate(500deg) scale(1.15);opacity:1}100%{transform:translateY(105vh) rotate(760deg) scale(.6);opacity:0}}
+.rain-flash{position:fixed;inset:0;background:#ffeaa0;z-index:49;pointer-events:none;animation:flash .55s ease-out forwards}
+@keyframes flash{0%{opacity:.45}100%{opacity:0}}
+@media(max-width:600px){
+ .container{padding:5px}.topbar{gap:5px;margin-bottom:4px}.info{padding:6px 9px}
+ .controls{gap:4px}.smallbtn{padding:7px 7px;font-size:10px}
+ .players{gap:4px;margin:4px 0 6px}.player{padding:5px 2px}
+ .player .animal{font-size:25px}.player strong{font-size:10px}
+ .player small{font-size:9px}.bagbtn{padding:4px 2px;font-size:9px}
+ .board-wrap{padding:4px}.board{gap:3px}.tile{border-radius:4px}
+ .tile .number{font-size:8px;left:2px;top:1px}
+ .tile .occupants{font-size:clamp(12px,3.3vw,20px)}
+ .game-area{gap:5px;margin-top:5px}.panel{padding:7px 4px}
+ .panel h3{font-size:13px}.dice-stage{height:78px}
+ .dice{transform:scale(.78)}
+ .dice.result1{transform:scale(.78) rotateX(0) rotateY(0)}
+ .dice.result2{transform:scale(.78) rotateX(0) rotateY(-90deg)}
+ .dice.result3{transform:scale(.78) rotateX(-90deg) rotateY(0)}
+ .dice.result4{transform:scale(.78) rotateX(90deg) rotateY(0)}
+ .dice.result5{transform:scale(.78) rotateX(0) rotateY(90deg)}
+ .dice.result6{transform:scale(.78) rotateX(0) rotateY(180deg)}
+ .rollbtn{padding:8px 12px;font-size:14px}
+ .status{font-size:10px;min-height:25px}.log{max-height:55px;font-size:10px;padding:5px}
+ .bag-grid{gap:5px}.bag-item{padding:7px;font-size:10px}
+}
+@media(max-height:650px){
+ header{padding:5px}header h1{font-size:21px}header p{font-size:10px;margin:2px}
+ .players{margin:3px 0}.player .animal{font-size:21px}
+ .dice-stage{height:65px}.panel{padding:5px}.log{max-height:35px}
+}
+</style>
+</head>
+
+<body>
+<header>
+ <h1>🎲 DADU PETI MISTERI 📦</h1>
+ <p>Jelajah • Berfikir • Belajar • Menang</p>
+</header>
+
+<div class="container">
+ <div class="topbar">
+  <div class="info" id="turnInfo">Pemain: Kijang</div>
+  <div class="controls">
+   <button class="smallbtn" id="musicBtn" onclick="toggleMusic()">🎵 Muzik: ON</button>
+   <button class="smallbtn" id="soundBtn" onclick="toggleSound()">🔊 Bunyi: ON</button>
+   <button class="smallbtn" id="voiceBtn" onclick="toggleVoice()">🗣️ Suara: ON</button>
+   <button class="smallbtn" onclick="restartGame()">↻ Mula semula</button>
+  </div>
+ </div>
+
+ <div class="players" id="players"></div>
+ <div class="board-wrap" id="boardWrap"><div class="board" id="board"></div></div>
+
+ <div class="game-area">
+  <div class="panel">
+   <h3>🎲 Dadu Misteri</h3>
+   <div class="dice-stage">
+    <div class="dice" id="dice">
+     <div class="face front">⚀</div><div class="face back">⚅</div>
+     <div class="face right">⚁</div><div class="face left">⚄</div>
+     <div class="face top">⚂</div><div class="face bottom">⚃</div>
+    </div>
+   </div>
+   <button class="rollbtn" id="rollBtn" onclick="rollDice()">BUANG DADU</button>
+   <div class="status" id="status">Tekan butang untuk mula bermain.</div>
+  </div>
+  <div class="panel">
+   <h3>📜 Catatan Pengembaraan</h3>
+   <div class="status" id="lastEvent">Belum ada pergerakan.</div>
+   <div class="log" id="log">Permainan menanti pengembara...</div>
+  </div>
+ </div>
+</div>
+
+<div id="rainLayer"></div>
+
+<div class="modal" id="introModal">
+ <div class="dialog">
+  <div class="effect">🎲📦</div>
+  <h2>Selamat Datang!</h2>
+  <p>Empat pengembara akan berlumba menuju petak ke-200.</p>
+  <p>🎲 Setiap pemain membaling dadu mengikut giliran.</p>
+  <p>📦 Terdapat <b>63 peti misteri</b> yang disusun secara rawak.</p>
+  <p>🧠 30 peti soalan: 10 Agama, 10 Matematik dan 10 Sains.</p>
+  <p>✅ Jawapan betul maju 3 hingga 8 petak.</p>
+  <p>❌ Jawapan salah dikenakan hukuman undur 4 hingga 10 petak.</p>
+  <p>🤢 10 Peti Kecewa, 🤡 10 Peti Prank dan 💎 10 Peti Harta.</p>
+  <p>☠️ Peti Tersingkir akan menyingkirkan pemain. 🔄 Peti khas menghantar pemain ke petak 1.</p>
+  <p>👑 Peti King memberikan kemenangan serta-merta!</p>
+  <p><b>🏆 Pemain pertama yang sampai ke petak 200 atau menemui Peti King menjadi juara!</b></p>
+  <button class="primary" onclick="startGame()">MULA PENGEMBARAAN</button>
+ </div>
+</div>
+
+<div class="modal hidden" id="questionModal">
+ <div class="dialog">
+  <div class="effect">📦</div>
+  <h2>Peti Misteri Dibuka!</h2>
+  <p id="subjectName"></p>
+  <div id="questionText"></div>
+  <button class="readbtn" onclick="repeatQuestion()">🔊 Dengar soalan sekali lagi</button>
+  <div id="answerArea"></div>
+ </div>
+</div>
+
+<div class="modal hidden" id="effectModal">
+ <div class="dialog">
+  <div class="effect" id="effectEmoji">✨</div>
+  <h2 id="effectTitle"></h2>
+  <p id="effectText"></p>
+  <button class="readbtn" onclick="repeatEffect()">🔊 Dengar sekali lagi</button>
+  <br>
+  <button class="primary" onclick="closeEffect()">TERUSKAN</button>
+ </div>
+</div>
+
+<div class="modal hidden" id="bagModal">
+ <div class="dialog">
+  <div class="effect">🎒✨</div>
+  <h2 id="bagTitle">Beg Ajaib</h2>
+  <p id="bagSubtitle"></p>
+  <div id="bagContent"></div>
+  <button class="primary" onclick="closeBag()">TUTUP BEG</button>
+ </div>
+</div>
+
+<div class="modal hidden" id="winModal">
+ <div class="dialog">
+  <div class="effect">🏆🎉</div>
+  <h2 id="winnerHeading">JUARA PENGEMBARAAN!</h2>
+  <p id="winnerText"></p>
+  <button class="readbtn" onclick="speakText(document.getElementById('winnerText').textContent)">🔊 Dengar</button>
+  <br>
+  <button class="primary" onclick="restartGame()">MAIN SEMULA</button>
+ </div>
+</div>
+
+<script>
+/* PEMAIN */
+const players=[
+ {name:"Raden Arunika",animal:"🦌",short:"Kijang",pos:0,bag:[],active:true},
+ {name:"Puteri Lazuardi",animal:"🐰",short:"Arnab",pos:0,bag:[],active:true},
+ {name:"Bara Wira",animal:"🐼",short:"Panda Merah",pos:0,bag:[],active:true},
+ {name:"Tara Cendana",animal:"🐿️",short:"Tupai",pos:0,bag:[],active:true}
+];
+
+const TOTAL=200;
+const CHEST_COUNT=63;
+let current=0,chests=new Map();
+let gameStarted=false,busy=false,gameOver=false;
+let audioCtx=null,masterGain=null,musicGain=null;
+let musicOn=true,soundOn=true,voiceOn=true;
+let musicTimer=null,musicStep=0,diceTimer=null;
+let currentQuestion=null,effectCallback=null,lastSpokenText="";
+let currentBagPlayer=null;
+
+/* BANK SOALAN ASAL */
+const questions={
+ Agama:[
+ ["Apakah maksud amanah dalam kehidupan seharian?",["Menjaga tanggungjawab yang diberikan","Mengambil hak orang lain","Menyembunyikan kesalahan"],0],
+ ["Mengapakah kita perlu meminta izin sebelum menggunakan barang orang lain?",["Supaya barang itu menjadi milik kita","Untuk menghormati hak pemiliknya","Supaya tidak perlu memulangkannya"],1],
+ ["Apakah tindakan terbaik apabila tersilap melakukan kesalahan terhadap rakan?",["Menyalahkan orang lain","Berpura-pura tidak tahu","Mengakui kesalahan dan meminta maaf"],2],
+ ["Apakah maksud ikhlas ketika melakukan kebaikan?",["Melakukannya kerana Allah","Mengharapkan pujian manusia","Mahukan hadiah semata-mata"],0],
+ ["Apakah tindakan yang betul apabila menemui wang di dalam kelas?",["Menyimpannya sendiri","Menyerahkannya kepada guru","Membahagikannya dengan rakan"],1],
+ ["Mengapakah kita perlu menepati janji?",["Supaya orang takut kepada kita","Supaya mendapat hadiah","Kerana menepati janji ialah sifat terpuji"],2],
+ ["Apakah yang perlu dilakukan apabila mendengar azan?",["Bersedia menunaikan solat","Terus bermain tanpa peduli","Memasang muzik dengan kuat"],0],
+ ["Apakah maksud bersangka baik terhadap orang lain?",["Menganggap semua orang bersalah","Tidak terus menuduh tanpa bukti","Menyebarkan cerita yang belum pasti"],1],
+ ["Apakah cara terbaik menghormati ibu bapa?",["Hanya mendengar apabila diberi hadiah","Mengabaikan nasihat mereka","Bercakap dengan sopan dan membantu mereka"],2],
+ ["Mengapakah kita dilarang mengumpat?",["Kerana ia menyakiti maruah orang lain","Kerana ia menjimatkan masa","Kerana ia menyebabkan kita lapar"],0],
+ ["Apakah maksud rezeki yang berkat?",["Mesti mempunyai jumlah yang banyak","Membawa kebaikan dan manfaat","Hanya datang daripada pekerjaan besar"],1],
+ ["Jika rakan tidak mempunyai makanan, apakah tindakan terpuji?",["Mengejeknya","Membiarkannya","Berkongsi makanan jika mampu"],2],
+ ["Apakah tindakan yang menunjukkan sifat sabar?",["Tetap tenang ketika menghadapi kesukaran","Mudah marah apabila ditegur","Membalas setiap kesalahan"],0],
+ ["Apakah yang perlu dilakukan jika melihat rakan dibuli?",["Merakam dan menyebarkan video","Membantu dengan selamat dan memaklumkan guru","Menyertai perbuatan membuli"],1],
+ ["Mengapakah ilmu perlu diamalkan?",["Supaya kita boleh bermegah","Supaya mendapat banyak pujian","Supaya ilmu memberi manfaat"],2],
+ ["Apakah maksud tawakal yang betul?",["Berusaha bersungguh-sungguh kemudian berserah kepada Allah","Tidak perlu berusaha langsung","Menunggu kejayaan tanpa tindakan"],0],
+ ["Apakah adab ketika berada di masjid?",["Berlari dan menjerit","Menjaga kebersihan dan ketenteraman","Mengganggu orang yang sedang solat"],1],
+ ["Apakah tindakan terbaik apabila menerima teguran?",["Terus bermasam muka","Membalas dengan kemarahan","Mendengar dan memperbaiki kesilapan"],2],
+ ["Apakah maksud syukur?",["Menghargai nikmat dengan hati, lisan dan perbuatan","Hanya menyebut terima kasih apabila mendapat hadiah","Sentiasa membandingkan diri dengan orang lain"],0],
+ ["Mengapakah kita perlu menjaga lidah?",["Supaya boleh bercakap tanpa henti","Supaya tidak menyakiti hati orang lain","Supaya sentiasa menang perdebatan"],1],
+ ["Apakah sikap terbaik apabila melihat kejayaan rakan?",["Berasa dengki","Mencari kelemahannya","Mengucapkan tahniah dan menjadikannya inspirasi"],2],
+ ["Apakah maksud adil?",["Meletakkan sesuatu pada tempat yang sepatutnya","Memberi semua perkara kepada seorang sahaja","Mengutamakan kawan rapat"],0],
+ ["Apabila terlupa membaca doa sebelum makan, apakah yang boleh dilakukan?",["Berhenti makan selama-lamanya","Membaca doa apabila teringat","Menyalahkan orang lain"],1],
+ ["Apakah tindakan yang betul apabila seseorang meminta bantuan?",["Terus mengejeknya","Berpura-pura tidak mendengar","Membantu mengikut kemampuan"],2],
+ ["Mengapakah menjaga kebersihan persekitaran penting?",["Mencegah penyakit dan mewujudkan suasana selesa","Supaya kelihatan kaya","Supaya tidak perlu belajar"],0],
+ ["Apakah yang dimaksudkan dengan riak?",["Melakukan sesuatu secara rahsia","Menunjukkan amalan untuk mendapatkan pujian manusia","Membantu orang tanpa mengharapkan balasan"],1],
+ ["Apakah tindakan terbaik apabila berlaku perselisihan antara dua rakan?",["Memihak tanpa mengetahui cerita","Menambahkan pergaduhan","Mendamaikan mereka dengan adil"],2],
+ ["Mengapakah kita perlu menjaga harta awam?",["Kerana ia digunakan dan dimiliki bersama","Kerana kita boleh mengambilnya","Kerana ia tidak mempunyai nilai"],0],
+ ["Apakah maksud muhasabah diri?",["Menyalahkan semua orang","Menilai dan memperbaiki diri sendiri","Membandingkan kekayaan"],1],
+ ["Apakah sikap yang menunjukkan rendah hati?",["Sentiasa membanggakan diri","Menghina orang yang kurang pandai","Tidak sombong walaupun mempunyai kelebihan"],2],
+ ["Mengapakah kita perlu berdoa dan berusaha?",["Kerana kedua-duanya melengkapkan ikhtiar seorang hamba","Supaya tidak perlu belajar","Supaya semua orang memuji kita"],0],
+ ["Apakah tindakan apabila mengetahui berita yang belum pasti?",["Terus menyebarkannya","Menyemak kesahihan sebelum berkongsi","Menambah cerita supaya menarik"],1],
+ ["Apakah maksud ihsan dalam berbuat baik?",["Melakukan sesuatu hanya apabila dilihat","Mengharapkan balasan setiap masa","Melakukan kebaikan dengan sebaik-baiknya"],2],
+ ["Mengapakah sifat pemaaf penting?",["Membantu memulihkan hubungan dan mengelakkan dendam","Membolehkan kita mengulangi kesalahan","Menjadikan kita sentiasa betul"],0],
+ ["Apakah tindakan yang tepat apabila diberi tugas berkumpulan?",["Membiarkan orang lain bekerja","Melaksanakan bahagian tugas dengan bertanggungjawab","Mengambil nama orang lain"],1]
+ ],
+ Matematik:[
+ ["Berapakah hasil 125 + 278?",["393","403","413"],1],
+ ["Berapakah hasil 500 - 267?",["233","243","223"],0],
+ ["Berapakah hasil 24 × 6?",["124","134","144"],2],
+ ["Berapakah hasil 144 ÷ 12?",["12","14","16"],0],
+ ["Jika 1 kotak mengandungi 24 pensel, berapakah jumlah pensel dalam 5 kotak?",["100","120","125"],1],
+ ["Ali mempunyai RM50. Dia membeli barang berharga RM18.75. Berapakah bakinya?",["RM30.25","RM32.75","RM31.25"],2],
+ ["Berapakah nilai digit 7 dalam nombor 47,325?",["7,000","700","70"],0],
+ ["Apakah nombor perdana antara berikut?",["21","23","27"],1],
+ ["Berapakah perimeter segi empat tepat yang panjangnya 12 cm dan lebarnya 5 cm?",["17 cm","24 cm","34 cm"],2],
+ ["Sebuah kelas mempunyai 36 murid. Separuh daripadanya perempuan. Berapa murid lelaki?",["18","16","20"],0],
+ ["Berapakah 3/4 daripada 80?",["50","60","70"],1],
+ ["Satu jam 35 minit bersamaan berapa minit?",["85","90","95"],2],
+ ["Berapakah hasil 15 × 12?",["180","170","160"],0],
+ ["Berapakah hasil 936 ÷ 9?",["102","104","106"],1],
+ ["Apakah pecahan yang sama nilai dengan 1/2?",["2/3","3/5","4/8"],2],
+ ["Sebuah buku berharga RM8.50. Berapakah harga 4 buah buku?",["RM34.00","RM32.00","RM36.00"],0],
+ ["Berapakah sudut bagi satu garis lurus?",["90 darjah","180 darjah","360 darjah"],1],
+ ["Jika 2.5 kg bersamaan 2,500 gram, berapakah 4 kg dalam gram?",["400","4000","40,000"],1],
+ ["Berapakah hasil 3.6 + 2.75?",["5.35","6.25","6.35"],2],
+ ["Sebuah bas bergerak sejauh 60 km dalam 1 jam. Berapa km dalam 3 jam pada kelajuan sama?",["180 km","120 km","200 km"],0],
+ ["Berapakah hasil 999 + 1,001?",["1,900","2,000","2,100"],1],
+ ["Sebuah segi empat sama mempunyai sisi 9 cm. Berapakah luasnya?",["36 cm²","72 cm²","81 cm²"],2],
+ ["Apakah nombor seterusnya dalam pola 3, 6, 12, 24, ...?",["48","36","42"],0],
+ ["Berapakah 20% daripada 150?",["20","30","40"],1],
+ ["Jika 5 orang berkongsi 125 gula-gula sama banyak, setiap orang mendapat berapa?",["20","30","25"],2],
+ ["Berapakah hasil 7 × (8 + 2)?",["70","56","80"],0],
+ ["Satu dozen setengah bersamaan berapa biji?",["12","18","24"],1],
+ ["Berapakah hasil 2,400 ÷ 100?",["12","24","240"],1],
+ ["Sebuah tangki mengandungi 850 liter air. Sebanyak 275 liter digunakan. Berapa liter tinggal?",["575","585","565"],0],
+ ["Berapakah purata bagi 6, 8 dan 10?",["7","9","8"],2],
+ ["Jika 4 batang pensel berharga RM6, berapakah harga 10 batang pensel?",["RM15","RM12","RM18"],0],
+ ["Berapakah 1/3 daripada 90?",["20","30","40"],1],
+ ["Apakah nilai tempat bagi digit 5 dalam nombor 65,432?",["Ratus","Ribu","Puluh ribu"],1],
+ ["Sebuah perjalanan bermula pukul 8:45 pagi dan mengambil masa 2 jam 35 minit. Pukul berapakah perjalanan tamat?",["11:20 pagi","10:20 pagi","11:10 pagi"],0],
+ ["Berapakah hasil 18 × 15?",["260","270","280"],1]
+ ],
+ Sains:[
+ ["Apakah proses tumbuhan menghasilkan makanan menggunakan cahaya matahari?",["Fotosintesis","Penyejatan","Kondensasi"],0],
+ ["Apakah gas yang diserap oleh tumbuhan semasa fotosintesis?",["Oksigen","Karbon dioksida","Nitrogen"],1],
+ ["Apakah fungsi utama akar tumbuhan?",["Menghasilkan bunga","Menarik serangga","Menyerap air dan mencengkam tanah"],2],
+ ["Mengapakah ais terapung di atas air?",["Ketumpatannya lebih rendah daripada air cecair","Ais lebih panas","Ais tidak mempunyai jisim"],0],
+ ["Apakah organ yang mengepam darah ke seluruh badan?",["Paru-paru","Jantung","Buah pinggang"],1],
+ ["Apakah yang berlaku kepada air apabila dipanaskan sehingga mendidih?",["Menjadi ais","Menjadi tanah","Berubah menjadi wap air"],2],
+ ["Planet manakah yang paling hampir dengan Matahari?",["Utarid","Marikh","Musytari"],0],
+ ["Apakah sumber tenaga utama bagi Bumi?",["Bulan","Matahari","Bintang Utara"],1],
+ ["Apakah fungsi paru-paru manusia?",["Mencerna makanan","Mengepam darah","Pertukaran gas oksigen dan karbon dioksida"],2],
+ ["Haiwan yang memakan tumbuhan dan haiwan lain dikenali sebagai apa?",["Omnivor","Herbivor","Karnivor"],0],
+ ["Apakah yang menyebabkan bayang-bayang terbentuk?",["Bunyi terhalang","Cahaya dihalang oleh objek","Angin bertiup"],1],
+ ["Apakah bahan yang boleh ditarik oleh magnet?",["Kayu","Plastik","Besi"],2],
+ ["Apakah urutan perubahan air yang betul dalam kitaran air?",["Penyejatan, kondensasi dan kerpasan","Pembekuan, pembakaran dan pencairan","Peleburan, pengaratan dan penyejatan"],0],
+ ["Mengapakah kita perlu mengasingkan sisa kitar semula?",["Supaya sampah bertambah","Supaya bahan boleh digunakan semula","Supaya semua bahan dibakar"],1],
+ ["Apakah fungsi rangka manusia?",["Menghasilkan makanan","Mencerna air","Menyokong badan dan melindungi organ"],2],
+ ["Apakah yang berlaku apabila dua kutub magnet yang sama didekatkan?",["Saling menolak","Saling menarik","Tidak mempunyai kesan"],0],
+ ["Apakah haiwan yang mengalami metamorfosis lengkap?",["Kucing","Rama-rama","Ayam"],1],
+ ["Apakah unit asas bagi hidupan?",["Organ","Tisu","Sel"],2],
+ ["Mengapakah permukaan logam terasa lebih sejuk daripada kayu pada suhu bilik?",["Logam mengalirkan haba lebih cepat","Logam menghasilkan ais","Kayu tidak mempunyai suhu"],0],
+ ["Apakah fungsi lapisan ozon?",["Menghasilkan hujan","Menyerap sebahagian sinaran ultraungu berbahaya","Menghasilkan oksigen untuk tumbuhan"],1],
+ ["Apakah yang diperlukan untuk pembakaran berlaku?",["Air, tanah dan cahaya","Pasir dan angin sahaja","Bahan api, oksigen dan haba"],2],
+ ["Apakah perubahan tenaga dalam lampu suluh?",["Tenaga kimia kepada elektrik kemudian cahaya","Tenaga bunyi kepada haba","Tenaga cahaya kepada makanan"],0],
+ ["Mengapakah bayu laut biasanya bertiup dari laut ke darat pada waktu siang?",["Laut lebih cepat panas daripada darat","Darat lebih cepat panas lalu udara naik","Laut tidak mempunyai udara"],1],
+ ["Apakah fungsi usus kecil?",["Mengepam darah","Menghasilkan bunyi","Menyerap nutrien daripada makanan"],2],
+ ["Apakah yang berlaku kepada isipadu kebanyakan bahan apabila dipanaskan?",["Mengembang","Mengecut","Hilang jisim"],0],
+ ["Mengapakah planet kekal berada pada orbit mengelilingi Matahari?",["Kerana tiada graviti","Kerana tarikan graviti Matahari","Kerana angin suria menolaknya"],1],
+ ["Apakah nama daya yang menarik objek ke arah Bumi?",["Geseran","Magnetisme","Graviti"],2],
+ ["Apakah fungsi gigi kacip?",["Memotong makanan","Mengisar makanan","Mengoyak makanan sahaja"],0],
+ ["Apakah kesan utama pencemaran udara terhadap manusia?",["Menambahkan oksigen","Menyebabkan masalah pernafasan","Meningkatkan kesuburan tanah"],1],
+ ["Apakah contoh perubahan kimia?",["Ais mencair","Air membeku","Besi berkarat"],2],
+ ["Apakah organ yang menapis bahan buangan daripada darah?",["Buah pinggang","Perut","Usus besar"],0],
+ ["Mengapakah bunyi tidak boleh merambat di ruang vakum?",["Kerana bunyi terlalu perlahan","Kerana tiada medium untuk membawa getaran","Kerana cahaya terlalu kuat"],1],
+ ["Apakah hubungan antara pemangsa dengan mangsa?",["Kedua-duanya sentiasa tumbuhan","Mangsa memakan pemangsa","Pemangsa memburu dan memakan mangsa"],2],
+ ["Apakah yang berlaku kepada bayang-bayang apabila objek didekatkan kepada sumber cahaya?",["Biasanya menjadi lebih besar","Sentiasa hilang","Menjadi lebih sejuk"],0],
+ ["Apakah fungsi klorofil dalam tumbuhan?",["Menyerap air daripada tanah","Menyerap tenaga cahaya","Menghasilkan akar"],1]
+ ]
+};
+
+/* SOALAN TIDAK BERULANG */
+let usedQuestions={Agama:new Set(),Matematik:new Set(),Sains:new Set()};
+
+function getUnusedQuestion(subject){
+ const available=questions[subject].map((q,i)=>i).filter(i=>!usedQuestions[subject].has(i));
+ if(!available.length)return null;
+ const index=available[randomInt(0,available.length-1)];
+ usedQuestions[subject].add(index);
+ const q=questions[subject][index];
+ return {subject,text:q[0],options:q[1],answer:q[2]};
+}
+
+/* SENARAI PETI: 63 KESELURUHAN */
+const chestTypes=[
+ ...Array(10).fill("question_Agama"),
+ ...Array(10).fill("question_Matematik"),
+ ...Array(10).fill("question_Sains"),
+ ...Array(10).fill("disappointment"),
+ ...Array(10).fill("prank"),
+ ...Array(10).fill("treasure"),
+ "eliminate","reset","king"
+];
+
+const disappointments=[
+ {name:"50 kg pisang busuk",emoji:"🍌🤢"},
+ {name:"20 kg kasut buruk koyak",emoji:"👞"},
+ {name:"5 tan air longkang",emoji:"💧🤮"},
+ {name:"2 tan sampah sarap",emoji:"🗑️"},
+ {name:"50 tan besi buruk",emoji:"🔩"},
+ {name:"100 kg tayar basikal hangus",emoji:"🛞"},
+ {name:"100 buah iPhone 18 Pro Max rosak",emoji:"📱💥"},
+ {name:"50 buah kereta buruk",emoji:"🚗"},
+ {name:"3 tan selipar putus",emoji:"🩴"},
+ {name:"50 kg ikan busuk",emoji:"🐟🤢"}
+];
+
+const pranks=[
+ {name:"Korek hidung kanan kiri",emoji:"👃"},
+ {name:"Korek telinga kanan kiri",emoji:"👂"},
+ {name:"Tarik hidung",emoji:"🤥"},
+ {name:"Ketawa 5 kali",emoji:"😂"},
+ {name:"Lompat katak 3 kali",emoji:"🐸"},
+ {name:"Kentut 3 kali",emoji:"💨"},
+ {name:"Lompat bintang 3 kali",emoji:"⭐"},
+ {name:"Jelir lidah panjang-panjang",emoji:"😛"},
+ {name:"Kena jentik jari 3 kali",emoji:"☝️"},
+ {name:"Ketuk ketampi 5 kali",emoji:"🏃"}
+];
+
+const treasures=[
+ {name:"50 kg emas",emoji:"🪙"},
+ {name:"100 kg gelang emas",emoji:"📿"},
+ {name:"200 kg cincin emas",emoji:"💍"},
+ {name:"100 kg berlian biru",emoji:"💎"},
+ {name:"100 kg zamrud hijau",emoji:"🟢"},
+ {name:"200 kg permata kuning",emoji:"🟡"},
+ {name:"5 tan syiling emas",emoji:"🪙"},
+ {name:"20 buah banglo mewah",emoji:"🏡"},
+ {name:"70 istana kayangan putih",emoji:"🏰"},
+ {name:"100 tongkat ajaib",emoji:"🪄"}
+];
+
+function makeChests(){
+ chests.clear();
+ const shuffled=[...chestTypes];
+ for(let i=shuffled.length-1;i>0;i--){
+  const j=randomInt(0,i);
+  [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];
+ }
+ const positions=[];
+ while(positions.length<CHEST_COUNT){
+  const p=randomInt(5,194);
+  if(!positions.includes(p))positions.push(p);
+ }
+ positions.forEach((pos,i)=>chests.set(pos,shuffled[i]));
+}
+
+/* SUARA PEMBACA */
+function speakText(text){
+ if(!voiceOn||!("speechSynthesis" in window))return;
+ lastSpokenText=text;
+ window.speechSynthesis.cancel();
+ const u=new SpeechSynthesisUtterance(text);
+ u.lang="ms-MY";u.rate=.88;u.pitch=1;u.volume=1;
+ const voices=window.speechSynthesis.getVoices();
+ const malay=voices.find(v=>v.lang&&v.lang.toLowerCase().startsWith("ms"));
+ if(malay)u.voice=malay;
+ else{
+  const fallback=voices.find(v=>v.lang&&v.lang.toLowerCase().startsWith("id"));
+  if(fallback)u.voice=fallback;
+ }
+ window.speechSynthesis.speak(u);
+}
+function repeatQuestion(){
+ if(!currentQuestion)return;
+ speakText("Subjek "+currentQuestion.subject+". Soalannya. "+currentQuestion.text+
+ " Pilihan jawapan pertama. "+currentQuestion.options[0]+
+ ". Pilihan jawapan kedua. "+currentQuestion.options[1]+
+ ". Pilihan jawapan ketiga. "+currentQuestion.options[2]);
+}
+function repeatEffect(){if(lastSpokenText)speakText(lastSpokenText)}
+function toggleVoice(){
+ voiceOn=!voiceOn;
+ document.getElementById("voiceBtn").textContent=voiceOn?"🗣️ Suara: ON":"🗣️ Suara: OFF";
+ if(voiceOn)speakText("Suara pembaca diaktifkan.");
+ else if("speechSynthesis" in window)window.speechSynthesis.cancel();
+}
+
+/* AUDIO */
+function initAudio(){
+ if(audioCtx){if(audioCtx.state==="suspended")audioCtx.resume();return}
+ const AC=window.AudioContext||window.webkitAudioContext;
+ if(!AC)return;
+ audioCtx=new AC();
+ masterGain=audioCtx.createGain();masterGain.gain.value=.9;masterGain.connect(audioCtx.destination);
+ musicGain=audioCtx.createGain();musicGain.gain.value=.22;musicGain.connect(masterGain);
+}
+function tone(freq,duration=.15,type="sine",volume=.3,delay=0){
+ if(!soundOn||!audioCtx)return;
+ const t=audioCtx.currentTime+delay;
+ const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+ osc.type=type;osc.frequency.setValueAtTime(freq,t);
+ gain.gain.setValueAtTime(.001,t);
+ gain.gain.exponentialRampToValueAtTime(Math.max(.001,volume),t+.015);
+ gain.gain.exponentialRampToValueAtTime(.001,t+duration);
+ osc.connect(gain);gain.connect(masterGain);osc.start(t);osc.stop(t+duration+.03);
+}
+function noise(duration=.12,volume=.2,frequency=1200){
+ if(!soundOn||!audioCtx)return;
+ const length=Math.max(1,Math.floor(audioCtx.sampleRate*duration));
+ const buffer=audioCtx.createBuffer(1,length,audioCtx.sampleRate);
+ const data=buffer.getChannelData(0);
+ for(let i=0;i<length;i++)data[i]=(Math.random()*2-1)*(1-i/length);
+ const src=audioCtx.createBufferSource(),filter=audioCtx.createBiquadFilter(),gain=audioCtx.createGain();
+ src.buffer=buffer;filter.type="lowpass";filter.frequency.value=frequency;gain.gain.value=volume;
+ src.connect(filter);filter.connect(gain);gain.connect(masterGain);src.start();
+}
+function playClick(){tone(650,.07,"sine",.13)}
+function playStep(){tone(125,.08,"triangle",.18);noise(.045,.09,500)}
+function playChest(){tone(330,.12,"triangle",.22,0);tone(440,.14,"triangle",.25,.12);tone(660,.24,"sine",.3,.26)}
+function playCorrect(){[523,659,784,1046].forEach((n,i)=>tone(n,.25,"sine",.25,i*.15))}
+function playWrong(){tone(260,.2,"sawtooth",.18,0);tone(190,.28,"sawtooth",.2,.2);noise(.2,.12,700)}
+function playAngel(){tone(880,.22,"sine",.18,0);tone(1174,.25,"sine",.2,.18);tone(1568,.5,"sine",.2,.38)}
+function playGenie(){tone(180,.2,"triangle",.2,0);tone(260,.2,"triangle",.2,.12);tone(130,.45,"sawtooth",.15,.25)}
+function playVictory(){[523,659,784,1046,784,1046,1318].forEach((n,i)=>tone(n,.28,"sine",.24,i*.18))}
+function playDice(){noise(.15,.22,1800);tone(230,.12,"square",.12)}
+function playReward(){[523,659,784,988,1174,1568].forEach((n,i)=>tone(n,.3,"sine",.23,i*.12))}
+function startDiceRattle(){
+ stopDiceRattle();if(!soundOn||!audioCtx)return;
+ diceTimer=setInterval(()=>{noise(.075,.15,2200);tone(150+Math.random()*180,.06,"square",.08)},125);
+}
+function stopDiceRattle(){if(diceTimer){clearInterval(diceTimer);diceTimer=null}}
+function toggleSound(){
+ soundOn=!soundOn;
+ document.getElementById("soundBtn").textContent=soundOn?"🔊 Bunyi: ON":"🔇 Bunyi: OFF";
+ if(soundOn){initAudio();playClick()}else stopDiceRattle();
+}
+function toggleMusic(){
+ musicOn=!musicOn;
+ document.getElementById("musicBtn").textContent=musicOn?"🎵 Muzik: ON":"🎵 Muzik: OFF";
+ if(musicOn){initAudio();startMusic()}else stopMusic();
+}
+function startMusic(){
+ if(!musicOn||!audioCtx||musicTimer)return;
+ const melody=[392,494,587,494,440,523,659,523,392,494,587,784,659,587,494,440];
+ musicTimer=setInterval(()=>{
+  if(!musicOn||!audioCtx||!musicGain)return;
+  const t=audioCtx.currentTime,osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+  osc.type="sine";osc.frequency.value=melody[musicStep%melody.length];
+  gain.gain.setValueAtTime(.001,t);gain.gain.linearRampToValueAtTime(.12,t+.04);gain.gain.exponentialRampToValueAtTime(.001,t+.38);
+  osc.connect(gain);gain.connect(musicGain);osc.start(t);osc.stop(t+.4);
+  if(musicStep%4===0){
+   const bass=audioCtx.createOscillator(),bg=audioCtx.createGain();
+   bass.type="triangle";bass.frequency.value=[98,110,130,110][Math.floor(musicStep/4)%4];
+   bg.gain.setValueAtTime(.001,t);bg.gain.linearRampToValueAtTime(.09,t+.03);bg.gain.exponentialRampToValueAtTime(.001,t+.35);
+   bass.connect(bg);bg.connect(musicGain);bass.start(t);bass.stop(t+.4);
+  }
+  musicStep++;
+ },420);
+}
+function stopMusic(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}}
+
+/* PAPAN */
+function createBoard(){
+ const board=document.getElementById("board");
+ board.innerHTML="";
+ for(let visualRow=0;visualRow<20;visualRow++){
+  const rowFromBottom=19-visualRow;
+  for(let col=0;col<10;col++){
+   const index=rowFromBottom*10+(rowFromBottom%2===0?col:9-col);
+   const tile=document.createElement("div");
+   tile.className="tile";tile.id="tile"+index;
+   if(index===0)tile.classList.add("start");
+   if(index===TOTAL-1)tile.classList.add("finish");
+   if(chests.has(index))tile.classList.add("chest");
+   const number=document.createElement("span");
+   number.className="number";number.textContent=index+1;tile.appendChild(number);
+   if(chests.has(index)){
+    const chest=document.createElement("span");
+    chest.className="chesticon";chest.textContent="📦";tile.appendChild(chest);
+   }
+   const occupants=document.createElement("div");
+   occupants.className="occupants";occupants.id="occupants"+index;tile.appendChild(occupants);
+   board.appendChild(tile);
+  }
+ }
+ renderPlayers();
+}
+function renderPlayers(){
+ for(let i=0;i<TOTAL;i++){
+  const el=document.getElementById("occupants"+i);
+  if(el)el.innerHTML="";
+ }
+ players.forEach(p=>{
+  if(!p.active)return;
+  const el=document.getElementById("occupants"+p.pos);
+  if(el){const mark=document.createElement("span");mark.textContent=p.animal;mark.title=p.name;el.appendChild(mark)}
+ });
+ renderPlayerCards();
+}
+function renderPlayerCards(){
+ const box=document.getElementById("players");
+ box.innerHTML="";
+ players.forEach((p,i)=>{
+  const card=document.createElement("div");
+  card.className="player"+(i===current&&!gameOver&&p.active?" active":"")+(p.active?"":" eliminated");
+  const bagCount=p.bag.reduce((sum,item)=>sum+item.count,0);
+  card.innerHTML=`<div class="animal">${p.active?p.animal:"☠️"}</div>
+   <strong>${p.short}</strong><small>${p.active?"Petak "+(p.pos+1):"TERSINGKIR"}</small>
+   <button class="bagbtn" onclick="openBag(${i})">🎒 BEG AJAIB<span>${bagCount} barang disimpan</span></button>`;
+  box.appendChild(card);
+ });
+ const active=players[current];
+ document.getElementById("turnInfo").textContent=active&&active.active?"Giliran: "+active.short:"Pengembaraan";
+}
+
+/* BEG AJAIB */
+function addToBag(playerIndex,item){
+ const existing=players[playerIndex].bag.find(x=>x.name===item.name);
+ if(existing)existing.count++;
+ else players[playerIndex].bag.push({name:item.name,emoji:item.emoji,quantity:item.quantity||"1 hadiah",kind:item.kind||"Harta",count:1});
+ renderPlayerCards();
+}
+function openBag(index){
+ currentBagPlayer=index;
+ const p=players[index];
+ document.getElementById("bagTitle").textContent="🎒 Beg Ajaib "+p.short;
+ document.getElementById("bagSubtitle").textContent="Pemilik: "+p.name+" • "+p.bag.reduce((s,x)=>s+x.count,0)+" barang terkumpul";
+ const content=document.getElementById("bagContent");
+ content.innerHTML="";
+ if(!p.bag.length){
+  content.innerHTML='<div class="bag-empty">Beg Ajaib masih kosong. Teruskan pengembaraan untuk mencari peti misteri!</div>';
+ }else{
+  const grid=document.createElement("div");grid.className="bag-grid";
+  p.bag.forEach(item=>{
+   const div=document.createElement("div");div.className="bag-item";
+   div.innerHTML=`<span class="bag-emoji">${item.emoji}</span><strong>${item.name}</strong>${item.quantity}<br>${item.kind}<br><b>Jumlah diperoleh: ${item.count}</b>`;
+   grid.appendChild(div);
+  });
+  content.appendChild(grid);
+ }
+ document.getElementById("bagModal").classList.remove("hidden");
+}
+function closeBag(){document.getElementById("bagModal").classList.add("hidden")}
+
+/* HUJAN BARANG */
+function rainItems(emoji){
+ const layer=document.getElementById("rainLayer");
+ layer.innerHTML="";
+ const flash=document.createElement("div");flash.className="rain-flash";layer.appendChild(flash);
+ for(let i=0;i<24;i++){
+  const el=document.createElement("div");el.className="rain-item";el.textContent=emoji;
+  el.style.left=(Math.random()*94)+"%";
+  el.style.animationDelay=(Math.random()*.85)+"s";
+  el.style.animationDuration=(1.6+Math.random()*.9)+"s";
+  el.style.transform="rotate("+randomInt(0,360)+"deg)";
+  layer.appendChild(el);
+ }
+ setTimeout(()=>{layer.innerHTML=""},3500);
+}
+
+/* UTILITI */
+function updateStatus(text){
+ document.getElementById("status").textContent=text;
+ document.getElementById("lastEvent").textContent=text;
+}
+function log(text){
+ const box=document.getElementById("log");
+ box.innerHTML=text+"<br>"+box.innerHTML;
+}
+function randomInt(min,max){return Math.floor(Math.random()*(max-min+1))+min}
+function activePlayers(){return players.filter(p=>p.active)}
+function removeChestIcon(pos){
+ const tile=document.getElementById("tile"+pos);
+ if(tile){tile.classList.remove("chest");const icon=tile.querySelector(".chesticon");if(icon)icon.remove()}
+}
+
+/* PERMAINAN */
+function startGame(){
+ initAudio();if(musicOn)startMusic();
+ document.getElementById("introModal").classList.add("hidden");
+ gameStarted=true;busy=false;gameOver=false;current=0;
+ updateStatus("Giliran pertama. Buang dadu!");
+ log("Pengembaraan bermula! 63 peti misteri telah disusun secara rawak.");
+ renderPlayers();document.getElementById("rollBtn").disabled=false;
+}
+function restartGame(){
+ initAudio();stopDiceRattle();
+ if("speechSynthesis" in window)window.speechSynthesis.cancel();
+ players.forEach(p=>{p.pos=0;p.bag=[];p.active=true});
+ current=0;busy=false;gameOver=false;gameStarted=false;
+ Object.keys(usedQuestions).forEach(s=>usedQuestions[s].clear());
+ makeChests();createBoard();
+ document.getElementById("dice").className="dice";
+ document.getElementById("rollBtn").disabled=true;
+ document.getElementById("lastEvent").textContent="Permainan baharu menanti.";
+ document.getElementById("log").textContent="Papan baharu dan 63 peti misteri telah disediakan.";
+ document.getElementById("introModal").classList.remove("hidden");
+ document.getElementById("questionModal").classList.add("hidden");
+ document.getElementById("effectModal").classList.add("hidden");
+ document.getElementById("bagModal").classList.add("hidden");
+ document.getElementById("winModal").classList.add("hidden");
+ document.getElementById("rainLayer").innerHTML="";
+ updateStatus("Bersedia untuk bermain.");
+}
+function rollDice(){
+ if(!gameStarted||busy||gameOver)return;
+ if(!players[current]||!players[current].active){nextTurn();return}
+ initAudio();if(audioCtx&&audioCtx.state==="suspended")audioCtx.resume();
+ busy=true;document.getElementById("rollBtn").disabled=true;
+ const dice=document.getElementById("dice");
+ dice.className="dice rolling";
+ updateStatus("Dadu sedang bergolek...");
+ playDice();startDiceRattle();
+ const result=randomInt(1,6);
+ setTimeout(()=>{
+  stopDiceRattle();dice.className="dice result"+result;tone(420,.09,"triangle",.2);
+  const p=players[current],old=p.pos;
+  p.pos=Math.min(TOTAL-1,p.pos+result);
+  log(`${p.short} membaling ${result}. Bergerak ke petak ${p.pos+1}.`);
+  updateStatus(`${p.short} mendapat ${result}.`);
+  moveAnimation(p,old,p.pos,()=>{
+   renderPlayers();
+   if(p.pos>=TOTAL-1){finishGame(p);return}
+   if(chests.has(p.pos))openChest();
+   else nextTurn();
+  });
+ },2000);
+}
+function moveAnimation(player,from,to,done){
+ const direction=to>=from?1:-1;let pos=from;
+ const interval=setInterval(()=>{
+  if(pos===to){clearInterval(interval);done();return}
+  pos+=direction;player.pos=pos;renderPlayers();playStep();
+ },100);
+}
+
+/* BUKA PETI */
+function openChest(){
+ playChest();
+ const p=players[current];
+ const type=chests.get(p.pos);
+ if(!type){nextTurn();return}
+ chests.delete(p.pos);
+ removeChestIcon(p.pos);
+
+ if(type.startsWith("question_")){
+  openQuestionChest(type.split("_")[1]);return;
+ }
+ if(type==="disappointment"){openDisappointment();return}
+ if(type==="prank"){openPrank();return}
+ if(type==="treasure"){openTreasure();return}
+ if(type==="eliminate"){eliminatePlayer();return}
+ if(type==="reset"){resetToStart();return}
+ if(type==="king"){kingVictory();return}
+ nextTurn();
+}
+
+/* PETI SOALAN */
+function openQuestionChest(subject){
+ const q=getUnusedQuestion(subject);
+ if(!q){
+  updateStatus("Semua soalan "+subject+" telah digunakan. Tiada soalan berulang.");
+  showEffect("📚","SOALAN HABIS","Semua soalan bagi subjek ini telah digunakan. Tiada soalan diulang.", "Semua soalan bagi subjek "+subject+" telah digunakan.",()=>nextTurn());
+  return;
+ }
+ currentQuestion=q;
+ document.getElementById("subjectName").textContent="Subjek: "+q.subject;
+ document.getElementById("questionText").textContent=q.text;
+ const area=document.getElementById("answerArea");area.innerHTML="";
+ q.options.forEach((option,index)=>{
+  const btn=document.createElement("button");
+  btn.className="answer";
+  btn.textContent=String.fromCharCode(65+index)+". "+option;
+  btn.onclick=()=>answerQuestion(index);
+  area.appendChild(btn);
+ });
+ document.getElementById("questionModal").classList.remove("hidden");
+ updateStatus("Dengar soalan dan pilih jawapan.");
+ speakText("Peti misteri dibuka. Subjek "+q.subject+". Soalannya. "+q.text+
+ " Pilihan pertama. "+q.options[0]+". Pilihan kedua. "+q.options[1]+". Pilihan ketiga. "+q.options[2]);
+}
+
+/* PETI KECEWA */
+function openDisappointment(){
+ const item=disappointments[randomInt(0,disappointments.length-1)];
+ const p=players[current];
+ log(`${p.short} membuka Peti Kecewa: ${item.name}.`);
+ playWrong();
+ const spoken="Aduhai "+p.short+". Kamu mendapat "+item.name+". Inilah hadiah yang mengecewakan!";
+ showEffect(item.emoji,"PETI KECEWA!",p.short+" mendapat "+item.name+". Aduhai, bukan hadiah yang diharapkan!",spoken,()=>nextTurn());
+}
+
+/* PETI PRANK */
+function openPrank(){
+ const item=pranks[randomInt(0,pranks.length-1)];
+ const p=players[current];
+ log(`${p.short} terkena prank: ${item.name}.`);
+ tone(450,.12,"square",.2);tone(300,.15,"square",.2,.15);
+ const spoken="Prank! "+p.short+". Kamu perlu melakukan aksi. "+item.name+".";
+ showEffect(item.emoji,"PETI PRANK!",p.short+" kena prank! Aksi kamu: "+item.name+".",spoken,()=>nextTurn());
+}
+
+/* PETI HARTA */
+function openTreasure(){
+ const item=treasures[randomInt(0,treasures.length-1)];
+ const p=players[current];
+ playReward();rainItems(item.emoji);
+ const spoken="Tahniah "+p.short+". Kamu mendapat harta "+item.name+". Harta ini disimpan dalam Beg Ajaib.";
+ log(`${p.short} mendapat harta ${item.name}.`);
+ showEffect(item.emoji,"PETI HARTA!",p.short+" mendapat "+item.name+". Harta ini akan disimpan dalam Beg Ajaib!",spoken,()=>{
+  addToBag(current,{...item,quantity:item.name,kind:"Harta"});
+  nextTurn();
+ });
+}
+
+/* PETI TERSINGKIR */
+function eliminatePlayer(){
+ const p=players[current];
+ p.active=false;
+ renderPlayers();
+ log("☠️ "+p.short+" telah tersingkir daripada pengembaraan!");
+ playWrong();
+ const remaining=activePlayers();
+ if(remaining.length===1){
+  const winner=remaining[0];
+  showEffect("☠️","TERSINGKIR!",p.short+" telah tersingkir! Hanya seorang pengembara masih tinggal.",p.short+" telah tersingkir.",()=>{
+   finishGame(winner,"Pemenang terakhir yang masih bertahan!");
+  });
+  return;
+ }
+ const spoken=p.short+" telah tersingkir daripada permainan. Giliran seterusnya diberikan kepada pengembara lain.";
+ showEffect("☠️","PETI TERSINGKIR!",p.short+" tersingkir! Kamu tidak boleh bermain lagi. Pemain lain meneruskan pengembaraan.",spoken,()=>{
+  nextTurn();
+ });
+}
+
+/* PETI KING */
+function kingVictory(){
+ const p=players[current];
+ log("👑 "+p.short+" menemui PETI KING dan terus menjadi juara!");
+ playVictory();
+ showEffect("👑","PETI KING!","LUAR BIASA! "+p.short+" menemui Peti King dan terus menjadi JUARA tanpa perlu sampai ke petak 200!","Tahniah "+p.short+". Kamu menemui Peti King dan terus menjadi juara pengembaraan!",()=>{
+  finishGame(p,"Pemenang melalui Peti King!");
+ });
+}
+
+/* PETI KEMBALI KE MULA */
+function resetToStart(){
+ const p=players[current];
+ log(`${p.short} terkena peti kembali ke permulaan!`);
+ const spoken=p.short+" membuka peti khas. Kamu perlu kembali ke petak nombor satu. Semua barang dalam Beg Ajaib kamu kekal.";
+ showEffect("🔄","KEMBALI KE PERMULAAN!","Malang! "+p.short+" perlu kembali ke petak nombor 1. Jangan risau, semua barang dalam Beg Ajaib masih kekal!",spoken,()=>{
+  p.pos=0;renderPlayers();
+  playGenie();
+  updateStatus(p.short+" kembali ke petak 1. Beg Ajaib kekal.");
+  nextTurn();
+ });
+}
+
+/* KEPUTUSAN SOALAN */
+function answerQuestion(choice){
+ if(!currentQuestion)return;
+ const correct=choice===currentQuestion.answer;
+ document.getElementById("questionModal").classList.add("hidden");
+ const p=players[current],old=p.pos;
+ const movement=correct?randomInt(3,8):randomInt(4,10);
+ const target=correct?Math.min(TOTAL-1,old+movement):Math.max(0,old-movement);
+ if(correct){
+  playCorrect();playAngel();
+  const message="Tahniah "+p.short+". Jawapan kamu betul. Kamu mendapat keuntungan. Kamu maju "+movement+" petak.";
+  log(`${p.short} menjawab BETUL. Keuntungan: maju ${movement} petak!`);
+  showEffect("👼","KEUNTUNGAN!","Tahniah! Jawapan betul. "+p.short+" mendapat keuntungan dan maju "+movement+" petak.",message,()=>{
+   movePlayerAfterAnswer(p,old,target);
+  });
+ }else{
+  playWrong();playGenie();
+  const message="Jawapan kamu salah. "+p.short+" dikenakan hukuman. Kamu perlu undur "+movement+" petak.";
+  log(`${p.short} menjawab SALAH. Hukuman: undur ${movement} petak.`);
+  showEffect("🧞","HUKUMAN!","Jawapan salah. "+p.short+" dikenakan hukuman dan perlu undur "+movement+" petak.",message,()=>{
+   movePlayerAfterAnswer(p,old,target);
+  });
+ }
+ currentQuestion=null;
+}
+function movePlayerAfterAnswer(p,old,target){
+ p.pos=old;renderPlayers();
+ const direction=target>=old?1:-1;let pos=old;
+ const interval=setInterval(()=>{
+  if(pos===target){
+   clearInterval(interval);p.pos=target;renderPlayers();
+   if(p.pos>=TOTAL-1)finishGame(p);else nextTurn();
+   return;
+  }
+  pos+=direction;p.pos=pos;renderPlayers();playStep();
+ },100);
+}
+function showEffect(emoji,title,message,spoken,callback){
+ effectCallback=callback;lastSpokenText=spoken;
+ document.getElementById("effectEmoji").textContent=emoji;
+ document.getElementById("effectTitle").textContent=title;
+ document.getElementById("effectText").textContent=message;
+ document.getElementById("effectModal").classList.remove("hidden");
+ speakText(spoken);
+}
+function closeEffect(){
+ document.getElementById("effectModal").classList.add("hidden");
+ if(effectCallback){
+  const fn=effectCallback;effectCallback=null;fn();
+ }
+}
+
+/* GILIRAN DAN PEMENANG */
+function nextTurn(){
+ if(gameOver)return;
+ const total=players.length;
+ let attempts=0;
+ do{
+  current=(current+1)%total;
+  attempts++;
+ }while(!players[current].active&&attempts<=total);
+ if(!players[current].active){
+  const remaining=activePlayers();
+  if(remaining.length===1){finishGame(remaining[0]);return}
+  return;
+ }
+ busy=false;renderPlayers();
+ document.getElementById("rollBtn").disabled=false;
+ updateStatus("Giliran "+players[current].short+". Buang dadu!");
+}
+function finishGame(p,reason="Berjaya sampai ke petak 200!"){
+ if(gameOver)return;
+ gameOver=true;busy=true;stopDiceRattle();playVictory();
+ document.getElementById("rollBtn").disabled=true;
+ const message=p.name+" daripada pasukan "+p.short+" menjadi JUARA! "+reason;
+ document.getElementById("winnerText").textContent=message;
+ document.getElementById("winnerHeading").textContent="JUARA PENGEMBARAAN!";
+ document.getElementById("winModal").classList.remove("hidden");
+ log("🏆 "+p.short+" MENANG!");
+ updateStatus("Permainan tamat. Tahniah kepada juara!");
+ speakText(message);
+}
+
+/* MULA */
+makeChests();
+createBoard();
+updateStatus("Tekan MULA PENGEMBARAAN untuk bermain.");
+</script>
+<div style="text-align:center; padding:12px; color:#d8c9a5; font-size:13px;">
+IdmI@HanyaAbdun2026
+</div>
+</body>
+</html>
